@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results skipped="0" failed="0" ignored="0" total="3" passed="3">
+  <reporter-output>
+  </reporter-output>
+  <suite name="Default suite" duration-ms="275" started-at="2020-11-10T00:21:44 ICT" finished-at="2020-11-10T00:21:44 ICT">
+    <groups>
+    </groups>
+    <test name="Default test" duration-ms="275" started-at="2020-11-10T00:21:44 ICT" finished-at="2020-11-10T00:21:44 ICT">
+      <class name="com.vanpt.auth.TestAuth">
+        <test-method status="PASS" signature="can_generate_secret_key()[pri:0, instance:com.vanpt.auth.TestAuth@1c3a4799]" name="can_generate_secret_key" duration-ms="25" started-at="2020-11-10T00:21:44 ICT" finished-at="2020-11-10T00:21:44 ICT">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- can_generate_secret_key -->
+        <test-method status="PASS" signature="can_get_barcode_url()[pri:0, instance:com.vanpt.auth.TestAuth@1c3a4799]" name="can_get_barcode_url" duration-ms="156" started-at="2020-11-10T00:21:44 ICT" finished-at="2020-11-10T00:21:44 ICT">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- can_get_barcode_url -->
+        <test-method status="PASS" signature="can_sync_with_google_authenticator()[pri:0, instance:com.vanpt.auth.TestAuth@1c3a4799]" name="can_sync_with_google_authenticator" duration-ms="9" started-at="2020-11-10T00:21:44 ICT" finished-at="2020-11-10T00:21:44 ICT">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- can_sync_with_google_authenticator -->
+      </class> <!-- com.vanpt.auth.TestAuth -->
+    </test> <!-- Default test -->
+  </suite> <!-- Default suite -->
+</testng-results>
