@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.vanpt.dto.LoginFormDto;
 import com.vanpt.dto.UserDto;
-import com.vanpt.models.User;
+import com.vanpt.models.UserInfo;
 import com.vanpt.service.UserService;
 
 @RestController
@@ -19,11 +19,16 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+	
+	@RequestMapping("/api/hello")
+	public String hello() {
+		return "hello";
+	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/api/signup")
 	public ResponseEntity<Object> signUp(@RequestBody LoginFormDto loginForm) {
 		try {
-			User user = userService.addUser(loginForm.getUsername(), loginForm.getPassword());
+			UserInfo user = userService.addUser(loginForm.getUsername(), loginForm.getPassword());
 			String token = user.generateToken();			
 			return new ResponseEntity<>(token, HttpStatus.OK);
 		} catch (RuntimeException e) {
@@ -41,7 +46,7 @@ public class UserController {
 		try {
 			String[] parts = token.split("@", 2);
 			int userId = Integer.parseInt(parts[0]);
-			User user = userService.getUser(userId);
+			UserInfo user = userService.getUser(userId);
 			user.validateToken(token);
 			UserDto userDto = new UserDto();
 			userDto.copyBasicInfo(user);
