@@ -1,29 +1,15 @@
 package com.vanpt.infrastructure;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.vanpt.models.User;
 
 @Repository
-public class UserRepository {
+public interface UserRepository extends JpaRepository<User, Integer> {
 
-	@Autowired
-	private SessionFactory sessionFactory;
-	
-	public int addUser(User user) {
-		Session session = null;
-		try {
-			session = sessionFactory.openSession();
-			session.beginTransaction();			
-			int id = (int) session.save(user);
-			session.getTransaction().commit();
-			return id;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return -1;
-		}
-	}
+	@Query(value = "select count(*) from Users where Username = :username", nativeQuery = true)
+	public Integer countUser(@Param("username") String username);
 }

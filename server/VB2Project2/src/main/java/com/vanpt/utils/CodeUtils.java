@@ -4,6 +4,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 
 import org.apache.commons.codec.binary.Base32;
@@ -19,6 +21,13 @@ import de.taimos.totp.TOTP;
 
 public class CodeUtils {
 
+	public static String hash(String input) throws Exception {
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		byte[] encodedHash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+		Base32 base32 = new Base32();
+		return base32.encodeToString(encodedHash);		
+	}
+	
 	public static String generateSecretKey() {
 		SecureRandom random = new SecureRandom();
 		byte[] bytes = new byte[20];

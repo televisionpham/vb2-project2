@@ -6,12 +6,16 @@ import javax.sql.DataSource;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 @SpringBootApplication
 public class Application {
@@ -61,6 +65,13 @@ public class Application {
         SessionFactory sf = factoryBean.getObject();
         System.out.println("## getSessionFactory: " + sf);
         return sf;
+    }
+	
+	@Primary
+    @Bean(name = "entityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory(
+            EntityManagerFactoryBuilder builder, @Qualifier("dataSource") DataSource dataSource) {
+        return builder.dataSource(dataSource).packages("com.vanpt.models").build();
     }
 
 }

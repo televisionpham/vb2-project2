@@ -1,11 +1,19 @@
 package com.vanpt.models;
 
+import java.security.Key;
+import java.util.Calendar;
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Entity
 @Table(name = "Users")
@@ -44,7 +52,7 @@ public class User {
 	private String salt;
 	
 	@Column(name = "OtpSeed")
-	private String otpSeed;
+	private String otpSeed;	
 
 	public Integer getId() {
 		return id;
@@ -133,6 +141,46 @@ public class User {
 	public void setOtpSeed(String otpSeed) {
 		this.otpSeed = otpSeed;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Username: ").append(this.userName).append("\n");
+		sb.append("First name: ").append(this.firstName).append("\n");
+		sb.append("Last name: ").append(this.lastName).append("\n");
+		sb.append("Email: ").append(this.email).append("\n");
+		sb.append("Phone: ").append(this.phone).append("\n");
+		sb.append("Address: ").append(this.address).append("\n");
+		
+		return sb.toString();
+	}
 	
+	public String generateToken() {
+		Key key = Keys.hmacShaKeyFor(this.passwordHash.getBytes());		
+		Calendar now = Calendar.getInstance();
+		Calendar exp = Calendar.getInstance();
+		exp.add(Calendar.MINUTE, 30);
+		String token = Jwts.builder()
+				.setIssuer(this.userName)
+				.setSubject(this.toString())
+				.setIssuedAt(now.getTime())
+				.setExpiration(exp.getTime())
+				.signWith(key)
+				.compact();
+		token = this.id + "@" + token;
+		return token;
+	}
+
+	public void validateToken(String token) {
+		int charSepIndex = token.indexOf("@");
+		String myToken = token.substring(charSepIndex + 1);
+		Key key = Keys.hmacShaKeyFor(this.passwordHash.getBytes());	 
+		JwtParser parser = Jwts.parserBuilder().setSigningKey(key).build();
+		String subject = parser.parseClaimsJws(myToken).getBody().getSubject();		
+		
+		if (!subject.equals(this.toString())) {
+			throw new RuntimeException("Token không đúng");
+		}
+	}
 	
 }
