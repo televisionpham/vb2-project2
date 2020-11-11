@@ -1,6 +1,6 @@
 package com.vanpt.dto;
 
-import com.vanpt.models.User;
+import com.vanpt.models.UserInfo;
 
 public class UserDto {
 	
@@ -84,7 +84,7 @@ public class UserDto {
 		this.use2fa = use2fa;
 	}
 
-	public void copyBasicInfo(User user)
+	public void copyBasicInfo(UserInfo user)
 	{
 		this.id = user.getId();
 		this.userName = user.getUserName();
