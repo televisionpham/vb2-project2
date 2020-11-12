@@ -1,5 +1,7 @@
 package com.vanpt.utils;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -7,6 +9,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Base64;
 
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
@@ -18,8 +21,15 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 
 import de.taimos.totp.TOTP;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class CodeUtils {
+
+	public static String hashPassword(String password, String salt) throws Exception {
+		StringBuilder passwordHash = new StringBuilder();
+		passwordHash.append(CodeUtils.hash(salt)).append(CodeUtils.hash(password));
+		return passwordHash.toString();
+	}
 
 	public static String hash(String input) throws Exception {
 		MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -60,5 +70,17 @@ public class CodeUtils {
 		try (FileOutputStream out = new FileOutputStream(filePath)) {
 			MatrixToImageWriter.writeToStream(matrix, "png", out);
 		}
+	}
+
+	public static String getBase64QrCodeImage(String barCodeData)
+			throws WriterException, IOException {
+		int height = 240;
+		int width = 240;
+		BitMatrix matrix = new MultiFormatWriter().encode(barCodeData, BarcodeFormat.QR_CODE, width, height);
+		final ByteArrayOutputStream os = new ByteArrayOutputStream();
+
+		MatrixToImageWriter.writeToStream(matrix, "png", os);
+		String result = Base64.getEncoder().encodeToString(os.toByteArray());
+		return result;
 	}
 }

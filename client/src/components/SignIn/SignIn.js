@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { signin } from '../../store/slice/authSlice'
+import { userSignIn } from '../../store/slice/authSlice'
 
-const SignIn = () => {
+const SignIn = (props) => {
     const dispatch = useDispatch();
     const [username, setUsername] = useState();
     const [password, setPassword] = useState();
@@ -17,9 +17,15 @@ const SignIn = () => {
         }
         
         try {
-            const resp = await dispatch(signin(user));
-            console.log(resp);
-            setErrorMsg('');
+            const resp = await dispatch(userSignIn(user)); 
+            console.log(resp.payload);
+            if (resp.payload.token) {
+                setErrorMsg('');
+                props.history.push('/');
+            } else {
+                
+            }
+            
         } catch (error) {
             console.log(error);
         }   

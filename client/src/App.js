@@ -1,12 +1,13 @@
-import { BrowserRouter, Switch, Route } from 'react-router-dom'
-import { Account, Home, SignIn, SignUp } from './components';
+import { Switch, Route, Router } from "react-router-dom";
+import { Account, Home, SignIn, SignUp } from "./components";
 import { Provider } from "react-redux";
-import store from './store';
+import store from "./store";
+import history from "./history";
 
 function App() {
   return (
-    <Provider store={store}>
-      <BrowserRouter>
+    <Router history={history}>
+      <Provider store={store}>
         <div className="App">
           <Switch>
             <Route exact path="/" component={Home} />
@@ -15,8 +16,8 @@ function App() {
             <Route path="/account" component={Account} />
           </Switch>
         </div>
-      </BrowserRouter>
-    </Provider>
+      </Provider>
+    </Router>
   );
 }
 

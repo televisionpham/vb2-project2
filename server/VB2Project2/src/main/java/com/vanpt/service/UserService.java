@@ -25,10 +25,7 @@ public class UserService {
 		userDto.setUserName(username);
 		userDto.setSalt(CodeUtils.generateSecretKey());
 		userDto.setOtpSeed(CodeUtils.generateSecretKey());
-	 		
-		StringBuilder passwordHash = new StringBuilder();
-		passwordHash.append(CodeUtils.hash(userDto.getSalt())).append(CodeUtils.hash(password));
-		userDto.setPasswordHash(passwordHash.toString());
+		userDto.setPasswordHash(CodeUtils.hashPassword(password, userDto.getSalt()));
 		UserInfo result = userRepository.save(userDto);
 		return result;
 	}

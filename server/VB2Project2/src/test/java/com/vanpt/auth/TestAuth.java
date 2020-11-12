@@ -47,5 +47,22 @@ public class TestAuth {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}	
+	}
+
+	@Test
+	public void can_get_base64_qr_code_image() {
+		String secretKey = "M264TJTUUHQF23O6U6BMGWJF45HXX2F5";
+		String email = "test@gmail.com";
+		String companyName = "Vanpt Co. Ltd.";
+		String barcodeUrl = CodeUtils.getGoogleAuthenticatorBarCode(secretKey, email, companyName);
+		System.out.println(barcodeUrl);
+		try {
+			String encodeImage = CodeUtils.getBase64QrCodeImage(barcodeUrl);
+			System.out.println(encodeImage);
+		} catch (WriterException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

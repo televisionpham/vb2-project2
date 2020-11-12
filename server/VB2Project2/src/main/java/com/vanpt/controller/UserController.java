@@ -2,6 +2,7 @@ package com.vanpt.controller;
 
 import java.util.Optional;
 
+import com.vanpt.utils.CodeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,11 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.vanpt.dto.UserDto;
 import com.vanpt.infrastructure.UserRepository;
@@ -26,6 +23,7 @@ import com.vanpt.service.UserService;
 import com.vanpt.utils.JwtUtil;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
 	@Autowired
@@ -51,28 +49,35 @@ public class UserController {
 	@RequestMapping(method = RequestMethod.POST, value = "/api/register")
 	public ResponseEntity<?> signUp(@RequestBody AuthenticationRequest request) {
 		try {
-			UserInfo user = userService.addUser(request.getUsername(), request.getPassword());			
-			String token = jwtUtil.generateToken(user.getUserName());			
-			return ResponseEntity.ok(new AuthenticationResponse(token));		
+			UserInfo user = userService.addUser(request.getUsername(), request.getPassword());
+			String token = jwtUtil.generateToken(user.getUserName());
+			return ResponseEntity.ok(new AuthenticationResponse(token));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/api/authenticate")
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest request) throws Exception {
 		try {
-			authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));			
+			try {
+				authenticationManager.authenticate(
+						new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+			} catch (BadCredentialsException e) {
+				throw e;
+			}
+
+			final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+			final String token = jwtUtil.generateToken(userDetails);
+			return ResponseEntity.ok(new AuthenticationResponse(token));
 		} catch (BadCredentialsException e) {
-			throw new Exception("Username or password is not correct", e);
+			e.printStackTrace();
+			return ResponseEntity.badRequest().body(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		
-		final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-		final String token = jwtUtil.generateToken(userDetails);
-		return ResponseEntity.ok(new AuthenticationResponse(token));
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/api/account")
@@ -81,16 +86,52 @@ public class UserController {
 			token = token.replace("Bearer ", "");			
 			String username = jwtUtil.extractUsername(token);
 			Optional<UserInfo> user = userRepository.findByUsername(username);	
-			user.orElseThrow(() -> new UsernameNotFoundException("Username or password is invalid"));
+			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
 			UserDto userDto = new UserDto();
 			userDto.copyBasicInfo(user.get());
 			return new ResponseEntity<>(userDto, HttpStatus.OK);
-		} catch (RuntimeException e) {
+		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/api/verifyotp")
+	public ResponseEntity<?> verifyOtpCode(@RequestBody String otpCode, @RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			String username = jwtUtil.extractUsername(token);
+			Optional<UserInfo> user = userRepository.findByUsername(username);
+			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
+			String code = CodeUtils.getTOTPCode(user.get().getOtpSeed());
+			if (!code.equals(otpCode)) {
+				return ResponseEntity.badRequest().body("Invalid OTP code");
+			}
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/api/getqrcode")
+	public ResponseEntity<?> getQrCode(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			String username = jwtUtil.extractUsername(token);
+			Optional<UserInfo> user = userRepository.findByUsername(username);
+			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
+			String encodedImage = CodeUtils.getBase64QrCodeImage(user.get().getBarcodeUrl());
+			return ResponseEntity.ok(encodedImage);
+		} catch (UsernameNotFoundException e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().body(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 	}
 }

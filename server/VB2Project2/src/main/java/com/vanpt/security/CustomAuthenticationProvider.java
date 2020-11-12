@@ -33,17 +33,15 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         Optional<UserInfo> user = userRepository.findByUsername(username);
         
         user.orElseThrow(() -> new UsernameNotFoundException("Username or password is invalid"));
-        
-        StringBuilder passwordHash = new StringBuilder();
-		
-        try {
-			passwordHash.append(CodeUtils.hash(user.get().getSalt())).append(CodeUtils.hash(password));
-		} catch (Exception e) {			
+
+		String passwordHash = null;
+		try {
+			passwordHash = CodeUtils.hashPassword(password, user.get().getSalt());
+		} catch (Exception e) {
 			e.printStackTrace();
-			throw new UsernameNotFoundException("Something went wrong");
 		}
-        
-        if (passwordHash.toString().equals(user.get().getPasswordHash())) {
+
+		if (passwordHash.equals(user.get().getPasswordHash())) {
         	Collection<GrantedAuthority> authorities = new ArrayList<>();
         	authenticationToken = new UsernamePasswordAuthenticationToken(
         			new User(username, password, authorities), password, authorities);        			

@@ -11,6 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.vanpt.utils.CodeUtils;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -165,5 +166,10 @@ public class UserInfo {
 		
 		return sb.toString();
 	}	
-	
+
+	public String getBarcodeUrl() {
+		String barcodeUrl = CodeUtils.getGoogleAuthenticatorBarCode(this.otpSeed, this.userName, "VB2 Project 2 - 2FA Demo");
+		return barcodeUrl;
+	}
+
 }
