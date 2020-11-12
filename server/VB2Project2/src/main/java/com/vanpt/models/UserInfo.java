@@ -164,34 +164,6 @@ public class UserInfo {
 		sb.append("Address: ").append(this.address).append("\n");
 		
 		return sb.toString();
-	}
-	
-	public String generateToken() {
-		Key key = Keys.hmacShaKeyFor(this.passwordHash.getBytes());		
-		Calendar now = Calendar.getInstance();
-		Calendar exp = Calendar.getInstance();
-		exp.add(Calendar.MINUTE, 30);
-		String token = Jwts.builder()
-				.setIssuer(this.userName)
-				.setSubject(this.toString())
-				.setIssuedAt(now.getTime())
-				.setExpiration(exp.getTime())
-				.signWith(key)
-				.compact();
-		token = this.id + "@" + token;
-		return token;
-	}
-
-	public void validateToken(String token) {
-		int charSepIndex = token.indexOf("@");
-		String myToken = token.substring(charSepIndex + 1);
-		Key key = Keys.hmacShaKeyFor(this.passwordHash.getBytes());	 
-		JwtParser parser = Jwts.parserBuilder().setSigningKey(key).build();
-		String subject = parser.parseClaimsJws(myToken).getBody().getSubject();		
-		
-		if (!subject.equals(this.toString())) {
-			throw new RuntimeException("Token không đúng");
-		}
-	}
+	}	
 	
 }

@@ -32,13 +32,4 @@ public class UserService {
 		UserInfo result = userRepository.save(userDto);
 		return result;
 	}
-
-	public UserInfo getUser(int userId) {
-		try {
-			UserInfo result = userRepository.getOne(userId);
-			return result;
-		} catch (EntityNotFoundException e) {
-			throw e;
-		}	
-	}
 }
