@@ -3,6 +3,7 @@ package com.vanpt.controller;
 import java.util.Base64;
 import java.util.Optional;
 
+import com.vanpt.dto.ChangePasswordDto;
 import com.vanpt.utils.CodeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -108,7 +109,7 @@ public class UserController {
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/api/verifyotp")
-	public ResponseEntity<?> verifyOtpCode(@RequestBody String otpCode, @RequestHeader("Authorization") String token) {
+	public ResponseEntity<?> verifyOtpCode(@RequestHeader("OTP") String otpCode, @RequestHeader("Authorization") String token) {
 		try {
 			token = token.replace("Bearer ", "");
 			String username = jwtUtil.extractUsername(token);
@@ -134,6 +135,89 @@ public class UserController {
 			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
 			String encodedImage = CodeUtils.getBase64QrCodeImage(user.get().getBarcodeUrl());
 			return ResponseEntity.ok(encodedImage);
+		} catch (UsernameNotFoundException e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().body(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/api/activate2fa")
+	public ResponseEntity<?> activate2fa(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			String username = jwtUtil.extractUsername(token);
+			Optional<UserInfo> user = userRepository.findByUsername(username);
+			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
+			UserInfo userInfo = user.get();
+			userInfo.setUse2fa(true);
+			userRepository.save(userInfo);
+			return ResponseEntity.ok().build();
+		} catch (UsernameNotFoundException e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().body(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/api/deactivate2fa")
+	public ResponseEntity<?> deactivate2fa(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			String username = jwtUtil.extractUsername(token);
+			Optional<UserInfo> user = userRepository.findByUsername(username);
+			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
+			UserInfo userInfo = user.get();
+			userInfo.setUse2fa(false);
+			userRepository.save(userInfo);
+			return ResponseEntity.ok().build();
+		} catch (UsernameNotFoundException e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().body(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/api/updateuserinfo")
+	public ResponseEntity<?> updateUserInfo(@RequestHeader("Authorization") String token, @RequestBody UserDto userDto) {
+		try {
+			token = token.replace("Bearer ", "");
+			String username = jwtUtil.extractUsername(token);
+			Optional<UserInfo> user = userRepository.findByUsername(username);
+			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
+			UserInfo userInfo = user.get();
+			userInfo.setFirstName(userDto.getFirstName());
+			userInfo.setLastName(userDto.getLastName());
+			userInfo.setAddress(userDto.getAddress());
+			userInfo.setEmail(userDto.getEmail());
+			userInfo.setPhone(userDto.getPhone());
+			userRepository.save(userInfo);
+			return ResponseEntity.ok().build();
+		} catch (UsernameNotFoundException e) {
+			e.printStackTrace();
+			return ResponseEntity.badRequest().body(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
+
+	@RequestMapping(method = RequestMethod.POST, value = "/api/changepassword")
+	public ResponseEntity<?> changePassword(@RequestHeader("Authorization") String token, @RequestBody ChangePasswordDto changePasswordDto) {
+		try {
+			token = token.replace("Bearer ", "");
+			String username = jwtUtil.extractUsername(token);
+			Optional<UserInfo> user = userRepository.findByUsername(username);
+			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
+			UserInfo userInfo = user.get();
+			userRepository.save(userInfo);
+			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
 			return ResponseEntity.badRequest().body(e.getMessage());

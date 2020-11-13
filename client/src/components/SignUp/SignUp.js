@@ -26,10 +26,10 @@ const SignUp = (props) => {
         try {
             const response = await dispatch(register(user));
             console.log(response);
-            if (response.payload.token) {
+            if (!response.payload.error) {
                 console.log(response.payload.token);                
                 props.history.push('/');
-            } else if (response.payload.error) {
+            } else {
                 setErrorMsg(response.payload.error.response.data);
             }
         } catch (error) {

@@ -31,11 +31,19 @@ export const authSlice = createSlice({
         token: localStorage.getItem('token')
     },
     reducers: {
+        updateUserInfo: (state, action) => {
+            console.log('updateUserInfo', action);
+            return {
+                ...state,
+                user: action.payload
+            }
+        },
         logout: (state) => {
             console.log('Log out');
             localStorage.clear();
             return {
                 ...state,
+                user: {},
                 token: '',
                 otpCode: ''
             };
@@ -75,6 +83,6 @@ export const authSlice = createSlice({
     }
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, updateUserInfo } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -1,9 +1,25 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../store/slice/authSlice";
 import "./NavBar.css";
 
-const NavBar = () => {
+const NavBar = (props) => {
+  const dispatch = useDispatch();
   const token = useSelector((state) => state.authReducer.token);
+  const username = useSelector((state) => {
+    console.log('NavBar state', state);
+    return state.authReducer.user? state.authReducer.user.username : '';
+  })  
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    dispatch(logout());
+    props.history.push('/login');
+  }
+
+  useEffect(() => {
+    console.log(username);
+  }, [username]);
 
   return (
     <header>
@@ -49,10 +65,10 @@ const NavBar = () => {
                   aria-haspopup="true"
                   aria-expanded="false"
                 >
-                  <i className="fa fa-user-circle-o fa-lg"></i> username
+                  <i className="fa fa-user-circle-o fa-lg"></i> {username}
                 </span>
                 <div className="dropdown-menu" aria-labelledby="userMenu">
-                  <button className="dropdown-item" type="button">
+                  <button className="dropdown-item" type="button" onClick={handleLogout}>
                     Đăng xuất
                   </button>
                 </div>

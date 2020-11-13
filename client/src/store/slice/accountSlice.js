@@ -32,6 +32,6 @@ export const accountSlice = createSlice({
                 ...state,
                 user: {}
             }
-        }
+        },        
     }
 })
