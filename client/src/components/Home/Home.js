@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Redirect } from "react-router-dom";
 import {
   requestQrCode,
   requestActivate2fa,
@@ -12,6 +13,7 @@ import { updateUserInfo } from "../../store/slice/authSlice";
 const Home = (props) => {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.authReducer.token);
+  const otpVerified = useSelector((state) => state.authReducer.otpVerified);
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -47,12 +49,20 @@ const Home = (props) => {
           setPhone(user.phone);
           setUse2fa(user.use2fa);
           dispatch(updateUserInfo(user));
+          console.log("otpVerified", otpVerified);
+          if (user.use2fa && !otpVerified) {
+            props.history.push("/verifyotp");
+          }
         }
       } catch (error) {
         console.log(error);
       }
     })();
-  }, [dispatch, token]);
+  }, [dispatch, otpVerified, props.history, token]);
+
+  if (!token) {
+    return <Redirect to="/login" />;
+  }
 
   const handleSubmitInfo = async (e) => {
     e.preventDefault();

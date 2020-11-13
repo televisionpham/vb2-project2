@@ -31,6 +31,13 @@ export const authSlice = createSlice({
         token: localStorage.getItem('token')
     },
     reducers: {
+        verifyOtpSuccess: (state, action) => {
+            console.log('verifyOtpSuccess', action);
+            return {
+                ...state,
+                otpVerified: true,
+            }
+        },
         updateUserInfo: (state, action) => {
             console.log('updateUserInfo', action);
             return {
@@ -45,7 +52,8 @@ export const authSlice = createSlice({
                 ...state,
                 user: {},
                 token: '',
-                otpCode: ''
+                otpCode: '',
+                otpVerified: false,
             };
         }
     },
@@ -83,6 +91,6 @@ export const authSlice = createSlice({
     }
 });
 
-export const { logout, updateUserInfo } = authSlice.actions;
+export const { logout, updateUserInfo, verifyOtpSuccess } = authSlice.actions;
 
 export default authSlice.reducer;
