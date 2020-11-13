@@ -1,5 +1,6 @@
 package com.vanpt.controller;
 
+import java.util.Base64;
 import java.util.Optional;
 
 import com.vanpt.utils.CodeUtils;
@@ -54,22 +55,29 @@ public class UserController {
 			return ResponseEntity.ok(new AuthenticationResponse(token));
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/api/authenticate")
-	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest request) throws Exception {
+	public ResponseEntity<?> createAuthenticationToken(@RequestHeader("Authorization") String request) throws Exception {
 		try {
+			String base64Credentials = request.replace("Basic ", "");
+			byte[] bytes = Base64.getDecoder().decode(base64Credentials);
+			String credentials = new String(bytes);
+			String[] parts = credentials.split(":", 2);
+			String username = parts[0];
+			String password = parts[1];
 			try {
 				authenticationManager.authenticate(
-						new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+						new UsernamePasswordAuthenticationToken(username, password));
 			} catch (BadCredentialsException e) {
 				throw e;
 			}
 
-			final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+			final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 			final String token = jwtUtil.generateToken(userDetails);
+			System.out.println(username + ": " + token);
 			return ResponseEntity.ok(new AuthenticationResponse(token));
 		} catch (BadCredentialsException e) {
 			e.printStackTrace();

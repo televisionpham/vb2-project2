@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { signup } from "../../store/slice/authSlice";
+import { register } from '../../store/slice/authSlice';
 
-const SignUp = () => {
+
+const SignUp = (props) => {
     const dispatch = useDispatch();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -13,7 +14,7 @@ const SignUp = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            setErrorMsg("Passwords are not matched.");
+            setErrorMsg("Mật khẩu không khớp.");
             return;
         }
         setErrorMsg('');
@@ -23,17 +24,23 @@ const SignUp = () => {
         }  
 
         try {
-            const resp = await dispatch(signup(user));
-            console.log(resp);
-            setErrorMsg('');
+            const response = await dispatch(register(user));
+            console.log(response);
+            if (response.payload.token) {
+                console.log(response.payload.token);                
+                props.history.push('/');
+            } else if (response.payload.error) {
+                setErrorMsg(response.payload.error.response.data);
+            }
         } catch (error) {
             console.log(error);
+            setErrorMsg(error);
         }          
     }
 
     return (
         <div className="container" style={{ marginTop: "100px" }}>
-            <h3 className="text-center">Sign up</h3>
+            <h3 className="text-center">Đăng ký</h3>
             <div className="row">
                 <div className="col-sm-1 col-md-4"></div>
                 <div className="col-sm-10 col-md-4">
@@ -56,16 +63,16 @@ const SignUp = () => {
                                 required
                                 onChange={(e) => setConfirmPassword(e.target.value)}/>
                         </div>
-                        <div className="text-center">
+                        <div className="text-center" style={{marginBottom: "10px"}}>
                             { errorMsg ? <span className="text-danger">{errorMsg}</span>
                                        : null }
                         </div>
                         <div className="text-center">
-                            <button type="submit" className="btn btn-primary">Sign up</button>
+                            <button type="submit" className="btn btn-primary">Đăng ký</button>
                         </div>
                     </form>
                     <div className="text-center">
-                        <span>Already have an account? <Link to="/signin" id="signin">Sign in</Link></span>
+                        <span>Đã có tài khoản? <Link to="/login" id="login">Đăng nhập</Link></span>
                     </div>                    
                 </div>                
             </div>

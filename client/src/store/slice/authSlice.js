@@ -1,61 +1,80 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { UrlConstants } from '../../constants';
+import { requestAuthenticate, requestRegister } from '../../api';
 
-export const userSignIn = createAsyncThunk(
-    'auth/userSignIn',
+export const login = createAsyncThunk(
+    'auth/login',
     async (user, thunkAPI) => {
         try {
-            const response = await axios.post(UrlConstants.API_BASE_URL + "/api/authenticate", user);
-            return response.data            
+            const response = await requestAuthenticate(user);
+            return response.data
         } catch (error) {
-            return thunkAPI.rejectWithValue({error});
-        }      
+            return thunkAPI.rejectWithValue({ error });
+        }
     }
-  )
+);
+
+export const register = createAsyncThunk(
+    'auth/register',
+    async (user, thunkAPI) => {
+        try {
+            const response = await requestRegister(user);
+            return response.data
+        } catch (error) {
+            return thunkAPI.rejectWithValue({ error });
+        }
+    }
+);
 
 export const authSlice = createSlice({
     name: 'auth',
     initialState: {
-        token: '',
-        otpCode: '',
-        error: ''
+        token: localStorage.getItem('token')
     },
     reducers: {
-        signin: async (state, action) => {                        
-            try {
-                          
-            } catch (error) {
-                console.log(error)
-            }            
-            return {
-                ...state
-            };
-        },
-        signup: (state, action) => {
-            console.log('Sign up action', action);
-            const user = Object.assign({}, action.payload);
-            console.log('user', user);
-            return {
-                ...state,                
-            };            
-        },
-        signout: (state) => {
-            console.log('Sign out');            
+        logout: (state) => {
+            console.log('Log out');
+            localStorage.clear();
             return {
                 ...state,
-                token: '',               
+                token: '',
                 otpCode: ''
-            };            
+            };
         }
     },
     extraReducers: {
-        [userSignIn.fulfilled]: (state, action) => {
-            state.token = action.payload.token;
+        [login.fulfilled]: (state, action) => {
+            localStorage.setItem('token', action.payload.token);
+            return {
+                ...state,
+                token: action.payload.token,
+                error: ''
+            }
+        },
+        [login.rejected]: (state, action) => {
+            console.log('login.rejected', action);
+            return {
+                ...state,                
+                error: action.error.message
+            }
+        },
+        [register.fulfilled]: (state, action) => {
+            localStorage.setItem('token', action.payload.token);
+            return {
+                ...state,
+                token: action.payload.token,
+                error: ''
+            }
+        },
+        [register.rejected]: (state, action) => {
+            console.log('register.rejected', action);
+            return {
+                ...state,
+                error: action.error.message
+            }
         }
     }
 });
 
-export const {signin, signup, signout} = authSlice.actions;
+export const { logout } = authSlice.actions;
 
 export default authSlice.reducer;
