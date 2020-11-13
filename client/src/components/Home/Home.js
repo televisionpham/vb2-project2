@@ -1,27 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Redirect } from 'react-router-dom';
 import { getUserInfo } from '../../store/slice/accountSlice';
+import { Redirect } from "react-router-dom";
 
 const Home = (props) => {
 
     //JSON.parse(decodeURIComponent(escape(window.atob(localStorage.getItem('skill_sheet_cache')))))
 
     const dispatch = useDispatch();
-    const token = useSelector(state => state.authReducer.token)
-
-    if (!token) {
-        <Redirect to="/login" />
-    }
+    const token = useSelector(state => state.authReducer.token)  
+    console.log(token);
 
     useEffect(() => {
-        const fetchUserInfo = async(token) => {
-            const response = await dispatch(getUserInfo(token));
-            console.log(response);
-        }    
-        console.log(token);
-        fetchUserInfo(token);
-    }, [token, dispatch])
+        if (!token) {
+            return;
+        }
+        (async function fetchUserInfo() {
+            try {
+                const response = await dispatch(getUserInfo(token));
+                console.log(response);
+                return response;
+            } catch (error) {
+                console.log(error);
+            }
+        })();  
+    }, [dispatch, token])
 
     return (
         <div className="container" id="home">

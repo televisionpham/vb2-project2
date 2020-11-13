@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import store from "./store";
 import history from "./history";
 import { NavBar } from "./components/layout";
+import './App.css'
 
 function App() {
   return (
