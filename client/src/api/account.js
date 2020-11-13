@@ -7,5 +7,6 @@ export const requestAccount = async (token) => {
             'Authorization': 'Bearer ' + token
         }
     });
-    return response.data;
+    console.log(response);
+    return response;
 }
