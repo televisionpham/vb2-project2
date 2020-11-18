@@ -61,7 +61,8 @@ public class UserController {
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/api/authenticate")
-	public ResponseEntity<?> createAuthenticationToken(@RequestHeader("Authorization") String request) throws Exception {
+	public ResponseEntity<?> createAuthenticationToken(@RequestHeader("Authorization") String request,
+													   @RequestHeader("OTP") String otpCode) throws Exception {
 		try {
 			String base64Credentials = request.replace("Basic ", "");
 			byte[] bytes = Base64.getDecoder().decode(base64Credentials);
@@ -74,6 +75,17 @@ public class UserController {
 						new UsernamePasswordAuthenticationToken(username, password));
 			} catch (BadCredentialsException e) {
 				throw e;
+			}
+			UserInfo user = userRepository.findByUsername(username).get();
+			if (user.getUse2fa()) {
+				if (otpCode.isEmpty()) {
+					return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("OTP code required");
+				}
+
+				String code = CodeUtils.getTOTPCode(user.getOtpSeed());
+				if (!code.equals(otpCode)) {
+					return ResponseEntity.badRequest().body("Invalid OTP code");
+				}
 			}
 
 			final UserDetails userDetails = userDetailsService.loadUserByUsername(username);

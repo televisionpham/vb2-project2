@@ -3,11 +3,13 @@ import { requestAuthenticate, requestRegister } from '../../api';
 
 export const login = createAsyncThunk(
     'auth/login',
-    async (user, thunkAPI) => {
+    async (data, thunkAPI) => {
+        console.log(data);
         try {
-            const response = await requestAuthenticate(user);
+            const response = await requestAuthenticate(data.user, data.otpCode);
             return response.data
         } catch (error) {
+            console.log(error.response);
             return thunkAPI.rejectWithValue({ error });
         }
     }
@@ -15,9 +17,9 @@ export const login = createAsyncThunk(
 
 export const register = createAsyncThunk(
     'auth/register',
-    async (user, thunkAPI) => {
+    async (data, thunkAPI) => {
         try {
-            const response = await requestRegister(user);
+            const response = await requestRegister(data);
             return response.data
         } catch (error) {
             return thunkAPI.rejectWithValue({ error });

@@ -1,9 +1,10 @@
 import { Switch, Route, Router } from "react-router-dom";
-import { Home, SignIn, SignUp, VerifyOtp } from "./components";
+import { Home, SignIn, SignUp } from "./components";
 import { Provider } from "react-redux";
 import store from "./store";
 import history from "./history";
 import { NavBar } from "./components/layout";
+import "antd/dist/antd.css";
 
 function App() {
   return (
@@ -15,7 +16,6 @@ function App() {
             <Route exact path="/" component={Home} />
             <Route path="/login" component={SignIn} />
             <Route path="/register" component={SignUp} />            
-            <Route path="/verifyotp" component={VerifyOtp} />  
             <Route path="/*" component={Home} />
           </Switch>
         </div>

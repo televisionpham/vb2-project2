@@ -7,13 +7,13 @@ import {
   requestDeactivate2fa,
   requestUpdateInfo,
 } from "../../api/account";
+import openNotification from "../../utils";
 import { getUserInfo } from "../../store/slice/accountSlice";
 import { updateUserInfo } from "../../store/slice/authSlice";
 
 const Home = (props) => {
   const dispatch = useDispatch();
   const token = useSelector((state) => state.authReducer.token);
-  const otpVerified = useSelector((state) => state.authReducer.otpVerified);
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -49,16 +49,12 @@ const Home = (props) => {
           setPhone(user.phone);
           setUse2fa(user.use2fa);
           dispatch(updateUserInfo(user));
-          console.log("otpVerified", otpVerified);
-          if (user.use2fa && !otpVerified) {
-            props.history.push("/verifyotp");
-          }
         }
       } catch (error) {
         console.log(error);
       }
     })();
-  }, [dispatch, otpVerified, props.history, token]);
+  }, [dispatch, props.history, token]);
 
   if (!token) {
     return <Redirect to="/login" />;
@@ -78,6 +74,7 @@ const Home = (props) => {
       const response = await requestUpdateInfo(token, user);
       console.log(response);
       dispatch(updateUserInfo(user));
+      openNotification("success", "Cập nhật", "Thành công");
     } catch (error) {
       console.log(error);
       alert(error);
