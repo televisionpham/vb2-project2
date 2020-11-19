@@ -3,13 +3,12 @@ import { requestAuthenticate, requestRegister } from '../../api';
 
 export const login = createAsyncThunk(
     'auth/login',
-    async (data, thunkAPI) => {
-        console.log(data);
+    async (credentials, thunkAPI) => {
+        console.log(credentials);
         try {
-            const response = await requestAuthenticate(data.user, data.otpCode);
+            const response = await requestAuthenticate(credentials);
             return response.data
         } catch (error) {
-            console.log(error.response);
             return thunkAPI.rejectWithValue({ error });
         }
     }

@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.vanpt.dto.ChangePasswordDto;
 import com.vanpt.utils.CodeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,7 +26,7 @@ import com.vanpt.service.UserService;
 import com.vanpt.utils.JwtUtil;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", exposedHeaders = HttpHeaders.WWW_AUTHENTICATE)
 public class UserController {
 
 	@Autowired
@@ -59,17 +60,22 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 	}
-	
+
 	@RequestMapping(method = RequestMethod.POST, value = "/api/authenticate")
-	public ResponseEntity<?> createAuthenticationToken(@RequestHeader("Authorization") String request,
-													   @RequestHeader("OTP") String otpCode) throws Exception {
+	public ResponseEntity<?> createAuthenticationToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String request) throws Exception {
 		try {
-			String base64Credentials = request.replace("Basic ", "");
+			String[] parts = request.split(",", 2);
+			String base64Credentials = parts[0].replace("Basic ", "");
 			byte[] bytes = Base64.getDecoder().decode(base64Credentials);
 			String credentials = new String(bytes);
-			String[] parts = credentials.split(":", 2);
-			String username = parts[0];
-			String password = parts[1];
+			String[] credParts = credentials.split(":", 2);
+			String username = credParts[0];
+			String password = credParts[1];
+			String[] otpParts  = parts[1].split("=");
+			String otpCode = "";
+			if (otpParts.length == 2) {
+				otpCode = otpParts[1];
+			}
 			try {
 				authenticationManager.authenticate(
 						new UsernamePasswordAuthenticationToken(username, password));
@@ -79,12 +85,14 @@ public class UserController {
 			UserInfo user = userRepository.findByUsername(username).get();
 			if (user.getUse2fa()) {
 				if (otpCode.isEmpty()) {
-					return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("OTP code required");
+					return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+							.header(HttpHeaders.WWW_AUTHENTICATE, "OTP")
+							.build();
 				}
 
 				String code = CodeUtils.getTOTPCode(user.getOtpSeed());
 				if (!code.equals(otpCode)) {
-					return ResponseEntity.badRequest().body("Invalid OTP code");
+					return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP code");
 				}
 			}
 
@@ -94,7 +102,7 @@ public class UserController {
 			return ResponseEntity.ok(new AuthenticationResponse(token));
 		} catch (BadCredentialsException e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -102,7 +110,7 @@ public class UserController {
 	}
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/api/account")
-	public ResponseEntity<Object> getUserInfo(@RequestHeader("Authorization") String token) {
+	public ResponseEntity<Object> getUserInfo(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		try {
 			token = token.replace("Bearer ", "");			
 			String username = jwtUtil.extractUsername(token);
@@ -113,33 +121,15 @@ public class UserController {
 			return new ResponseEntity<>(userDto, HttpStatus.OK);
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
-	@RequestMapping(method = RequestMethod.POST, value = "/api/verifyotp")
-	public ResponseEntity<?> verifyOtpCode(@RequestHeader("OTP") String otpCode, @RequestHeader("Authorization") String token) {
-		try {
-			token = token.replace("Bearer ", "");
-			String username = jwtUtil.extractUsername(token);
-			Optional<UserInfo> user = userRepository.findByUsername(username);
-			user.orElseThrow(() -> new UsernameNotFoundException("Invalid token"));
-			String code = CodeUtils.getTOTPCode(user.get().getOtpSeed());
-			if (!code.equals(otpCode)) {
-				return ResponseEntity.badRequest().body("Invalid OTP code");
-			}
-			return ResponseEntity.ok().build();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-		}
-	}
-
 	@RequestMapping(method = RequestMethod.POST, value = "/api/getqrcode")
-	public ResponseEntity<?> getQrCode(@RequestHeader("Authorization") String token) {
+	public ResponseEntity<?> getQrCode(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 		try {
 			token = token.replace("Bearer ", "");
 			String username = jwtUtil.extractUsername(token);
@@ -149,7 +139,7 @@ public class UserController {
 			return ResponseEntity.ok(encodedImage);
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -169,7 +159,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -189,7 +179,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -213,7 +203,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -232,7 +222,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.badRequest().body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

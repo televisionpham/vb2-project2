@@ -13,20 +13,23 @@ const SignIn = (props) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const user = {
+        const credentials = {
             username,
-            password
+            password,
+            otpCode
         }
 
         try {
-            const response = await dispatch(login({ user, otpCode }));
+            const response = await dispatch(login(credentials));
             console.log('SignIn', response);
             if (response) {
                 if (!response.payload.error) {
                     console.log(response.payload.token);
                     props.history.push('/');
                 } else {
-                    if (response.payload.error.response.status === 417) {
+                    console.log();
+                    if (response.payload.error.response.status === 401 && 
+                        response.payload.error.response.headers["www-authenticate"] === "OTP") {
                         setShowVerifyOtpForm(true);
                     } else {
                         setErrorMsg(response.payload.error.response.data);

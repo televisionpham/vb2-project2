@@ -65,4 +65,12 @@ public class TestAuth {
 			e.printStackTrace();
 		}
 	}
+
+	@Test
+	public void can_hash_password_with_salt() throws Exception {
+		String salt = "DH3BFFEIIEPOPHAXTP2U4YUV3RLPP3HG";
+		String password = "test";
+		String result = CodeUtils.hashPassword(password, salt);
+		System.out.println(result);
+	}
 }

@@ -27,7 +27,7 @@ public class CodeUtils {
 
 	public static String hashPassword(String password, String salt) throws Exception {
 		StringBuilder passwordHash = new StringBuilder();
-		passwordHash.append(CodeUtils.hash(salt)).append(CodeUtils.hash(password));
+		passwordHash.append(CodeUtils.hash(salt.concat(password)));
 		return passwordHash.toString();
 	}
 
