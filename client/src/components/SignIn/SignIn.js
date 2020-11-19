@@ -11,6 +11,9 @@ const SignIn = (props) => {
     const [otpCode, setOtpCode] = useState('');
     const [showVerifyOtpForm, setShowVerifyOtpForm] = useState(false);
 
+    const [salt, setSalt] = useState('');
+    const [challenge, setChallenge] = useState('');
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const credentials = {
@@ -20,8 +23,7 @@ const SignIn = (props) => {
         }
 
         try {
-            const response = await dispatch(login(credentials));
-            console.log('SignIn', response);
+            const response = await dispatch(login(credentials));            
             if (response) {
                 if (!response.payload.error) {
                     console.log(response.payload.token);
@@ -40,6 +42,10 @@ const SignIn = (props) => {
             console.log(error);
             setErrorMsg(error.response);
         }
+    }
+
+    const handleChallenge = async () => {
+
     }
 
     const signInForm = () => {

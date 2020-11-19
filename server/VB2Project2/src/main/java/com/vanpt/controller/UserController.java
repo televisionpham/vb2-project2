@@ -61,8 +61,75 @@ public class UserController {
 		}
 	}
 
+	@RequestMapping(method = RequestMethod.POST, value = "/api/challenge")
+	public ResponseEntity<?> challenge(@RequestHeader(HttpHeaders.AUTHORIZATION) String request) {
+		try {
+			if (request.startsWith("VB2PROJECT2 ")) {
+				String content = request.replace("VB2PROJECT2 ", "");
+				if (content.startsWith("c=")) {
+					String[] parts = content.split("=", 2);
+					String username = parts[1];
+					Optional<UserInfo> userInfo = userRepository.findByUsername(username);
+					if (userInfo == null) {
+						return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+								.header(HttpHeaders.WWW_AUTHENTICATE,
+										"s=" + CodeUtils.generateSecretKey() + ",c=" + CodeUtils.generateSecretKey())
+								.build();
+					}
+					String challenge = userService.generateChallenge(username);
+					return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+							.header(HttpHeaders.WWW_AUTHENTICATE,
+									"s=" + userInfo.get().getSalt() + ",c=" + challenge)
+							.build();
+				} else if (content.startsWith("r=")) {
+					String[] parts = content.split(",", 2);
+					String[] challengeParts = parts[0].split("=");
+					String[] otpParts = parts[1].split("=");
+					String otpCode = "";
+					String challengeResponse = challengeParts[1];
+					String username = userService.getUsernameFromChallenge(challengeResponse);
+					if (username.isEmpty()) {
+						return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password");
+					}
+					Optional<UserInfo> userInfo = userRepository.findByUsername(username);
+					if (userInfo == null) {
+						throw new Exception("Could not find user: " + username);
+					}
+					if (otpParts.length == 2) {
+						otpCode = otpParts[1];
+					}
+					UserInfo user = userInfo.get();
+					if (user.getUse2fa()) {
+						if (otpCode.isEmpty()) {
+							return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+									.header(HttpHeaders.WWW_AUTHENTICATE, "OTP")
+									.build();
+						}
+
+						String code = CodeUtils.getTOTPCode(user.getOtpSeed());
+						if (!code.equals(otpCode)) {
+							return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid OTP code");
+						}
+					}
+
+					final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+					final String token = jwtUtil.generateToken(userDetails);
+					System.out.println(username + ": " + token);
+					return ResponseEntity.ok(new AuthenticationResponse(token));
+				} else {
+					return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+				}
+			} else {
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
+
 	@RequestMapping(method = RequestMethod.POST, value = "/api/authenticate")
-	public ResponseEntity<?> createAuthenticationToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String request) throws Exception {
+	public ResponseEntity<?> createAuthenticationToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String request) {
 		try {
 			String[] parts = request.split(",", 2);
 			String base64Credentials = parts[0].replace("Basic ", "");
@@ -79,8 +146,9 @@ public class UserController {
 			try {
 				authenticationManager.authenticate(
 						new UsernamePasswordAuthenticationToken(username, password));
-			} catch (BadCredentialsException e) {
-				throw e;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password");
 			}
 			UserInfo user = userRepository.findByUsername(username).get();
 			if (user.getUse2fa()) {
@@ -92,7 +160,7 @@ public class UserController {
 
 				String code = CodeUtils.getTOTPCode(user.getOtpSeed());
 				if (!code.equals(otpCode)) {
-					return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP code");
+					return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid OTP code");
 				}
 			}
 
@@ -102,7 +170,7 @@ public class UserController {
 			return ResponseEntity.ok(new AuthenticationResponse(token));
 		} catch (BadCredentialsException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -121,7 +189,7 @@ public class UserController {
 			return new ResponseEntity<>(userDto, HttpStatus.OK);
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -139,7 +207,7 @@ public class UserController {
 			return ResponseEntity.ok(encodedImage);
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -159,7 +227,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -179,7 +247,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -203,7 +271,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
@@ -222,7 +290,7 @@ public class UserController {
 			return ResponseEntity.ok().build();
 		} catch (UsernameNotFoundException e) {
 			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());

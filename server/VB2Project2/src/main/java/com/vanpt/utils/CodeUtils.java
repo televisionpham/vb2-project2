@@ -1,6 +1,5 @@
 package com.vanpt.utils;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,21 +20,25 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 
 import de.taimos.totp.TOTP;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class CodeUtils {
 
-	public static String hashPassword(String password, String salt) throws Exception {
+	public static String hashPassword(String password, String salt) {
 		StringBuilder passwordHash = new StringBuilder();
 		passwordHash.append(CodeUtils.hash(salt.concat(password)));
 		return passwordHash.toString();
 	}
 
-	public static String hash(String input) throws Exception {
-		MessageDigest digest = MessageDigest.getInstance("SHA-256");
-		byte[] encodedHash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-		Base32 base32 = new Base32();
-		return base32.encodeToString(encodedHash);		
+	public static String hash(String input) {
+		try {
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] encodedHash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+			Base32 base32 = new Base32();
+			return base32.encodeToString(encodedHash);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
 	}
 	
 	public static String generateSecretKey() {

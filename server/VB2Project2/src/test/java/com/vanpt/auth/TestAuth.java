@@ -68,7 +68,7 @@ public class TestAuth {
 
 	@Test
 	public void can_hash_password_with_salt() throws Exception {
-		String salt = "DH3BFFEIIEPOPHAXTP2U4YUV3RLPP3HG";
+		String salt = "4IRKFGEBOYBUFDWYK2IILIR3WZSP5HZP";
 		String password = "test";
 		String result = CodeUtils.hashPassword(password, salt);
 		System.out.println(result);
