@@ -41,7 +41,7 @@ public class UserService {
 		if (user == null) {
 			return challenge;
 		}
-		String hashChallenge = CodeUtils.hash(user.get().getPasswordHash() + challenge);
+		String hashChallenge = CodeUtils.hash(user.get().getPasswordHash() + challenge, "MD5");
 		challenges.put(hashChallenge, username);
 		return challenge;
 	}

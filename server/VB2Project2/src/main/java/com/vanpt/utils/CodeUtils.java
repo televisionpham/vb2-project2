@@ -30,8 +30,11 @@ public class CodeUtils {
 	}
 
 	public static String hash(String input) {
+		return hash(input, "SHA-1");
+	}
+	public static String hash(String input, String algorithm) {
 		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-1");
+			MessageDigest digest = MessageDigest.getInstance(algorithm);
 			byte[] encodedHash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
 			Base64 base64 = new Base64();
 			return base64.encodeToString(encodedHash);

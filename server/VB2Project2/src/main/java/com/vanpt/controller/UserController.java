@@ -67,8 +67,7 @@ public class UserController {
 			if (request.startsWith("VB2PROJECT2 ")) {
 				String content = request.replace("VB2PROJECT2 ", "");
 				if (content.startsWith("c=")) {
-					String[] parts = content.split("=", 2);
-					String username = parts[1];
+					String username = content.substring(2);
 					Optional<UserInfo> userInfo = userRepository.findByUsername(username);
 					if (userInfo == null) {
 						return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -83,10 +82,9 @@ public class UserController {
 							.build();
 				} else if (content.startsWith("r=")) {
 					String[] parts = content.split(",", 2);
-					String[] challengeParts = parts[0].split("=");
-					String[] otpParts = parts[1].split("=");
-					String otpCode = "";
-					String challengeResponse = challengeParts[1];
+					String challengeResponse = parts[0].substring(2);
+					String otpCode = parts[1].substring(2);
+
 					String username = userService.getUsernameFromChallenge(challengeResponse);
 					if (username.isEmpty()) {
 						return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password");
@@ -94,9 +92,6 @@ public class UserController {
 					Optional<UserInfo> userInfo = userRepository.findByUsername(username);
 					if (userInfo == null) {
 						throw new Exception("Could not find user: " + username);
-					}
-					if (otpParts.length == 2) {
-						otpCode = otpParts[1];
 					}
 					UserInfo user = userInfo.get();
 					if (user.getUse2fa()) {
@@ -115,6 +110,7 @@ public class UserController {
 					final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 					final String token = jwtUtil.generateToken(userDetails);
 					System.out.println(username + ": " + token);
+					userService.removeChallenge(challengeResponse);
 					return ResponseEntity.ok(new AuthenticationResponse(token));
 				} else {
 					return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

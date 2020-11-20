@@ -8,7 +8,7 @@ export const openNotification = (type, message, description) => {
   });
   const lines = description.split('\n');
   const descriptionElement = (
-    <code>
+    <code key='notification'>
       {lines.map(l => <span>{l}<br/></span>)}
     </code>
   )

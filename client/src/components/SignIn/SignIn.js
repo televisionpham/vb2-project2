@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { login } from '../../store/slice/authSlice'
+import { login, loginSuccess } from '../../store/slice/authSlice'
 import { requestChallenge } from '../../api/auth';
 import { HttpHeaders } from '../../constants';
 import crypto from 'crypto';
@@ -48,36 +48,61 @@ const SignIn = (props) => {
     const handleChallenge = async (e) => {
         e.preventDefault();
         try {
-            const response = await requestChallenge("c=" + username);
-            console.log(response);
-        } catch (error) {
-            console.log(error.response);
-            if (error.response) {
-                if (error.response.status === 401) {
-                    const wwwAuth = error.response.headers[HttpHeaders.WWW_AUTHENTICATE];
+            const response1 = await requestChallenge("c=" + username);
+            console.log(response1);
+        } catch (error1) {
+            console.log(error1.response);
+            if (error1.response) {
+                if (error1.response.status === 401) {
+                    let wwwAuth = error1.response.headers[HttpHeaders.WWW_AUTHENTICATE];
                     console.log(wwwAuth);
                     if (wwwAuth !== "OTP") {
-                        const parts = wwwAuth.split('.');                        
+                        const parts = wwwAuth.split('.');
                         const salt = parts[0];
-                        const challenge = parts[1];                      
+                        const challenge = parts[1];
                         const sha1 = crypto.createHash('sha1');
-                        const passwordHash = sha1.update(salt + password).digest('base64')  
-                        console.log('passwordHash', passwordHash);                     
-                        const answer = sha1.update(passwordHash + challenge).digest('base64');
+                        const passwordHash = sha1.update(salt + password).digest('base64')
+                        console.log('passwordHash', passwordHash);
+                        const md5 = crypto.createHash('md5');
+                        const answer = md5.update(passwordHash + challenge).digest('base64');
                         console.log('passwordHash + challenge', passwordHash + challenge)
                         console.log('hash(passwordHash + challenge)', answer)
                         setChallengeHash(answer);
-                        const response2 = await requestChallenge("r=" + answer + ",otp=" + otpCode);
-                        console.log(response2);
-                    } else {
+                        try {
+                            const response2 = await requestChallenge("r=" + answer + ",o=" + otpCode);
+                            console.log(response2);
+                        } catch (error2) {
+                            console.log(error2);
+                            if (error2.response && error2.response.status === 401) {
+                                wwwAuth = error2.response.headers[HttpHeaders.WWW_AUTHENTICATE];
+                                if (wwwAuth === 'OTP') {
+                                    setShowVerifyOtpForm(true);
+                                }
+                            }
+                        }
 
                     }
                 } else {
-                    setErrorMsg("ERROR: " + error.status);
+                    setErrorMsg("ERROR: " + error1.status);
                 }
             } else {
-                setErrorMsg(error.message)
+                setErrorMsg(error1.message)
             }
+        }
+    }
+
+    const handleVerifyOtpCode = async (e) => {
+        e.preventDefault();
+        console.log(challengeHash);
+        try {
+            const response = await requestChallenge("r=" + challengeHash + ",o=" + otpCode);
+            console.log(response);
+            if (response && response.status === 200) {
+                dispatch(loginSuccess(response.data));
+                props.history.push('/');
+            }
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -128,7 +153,7 @@ const SignIn = (props) => {
                         <div className="card">
                             <div className="card-body">
                                 <h4 className="card-title">Xác thực 2 yếu tố</h4>
-                                <form onSubmit={handleSubmit}>
+                                <form onSubmit={handleVerifyOtpCode}>
                                     <div className="form-group">
                                         <label htmlFor="otpCode">Mã OTP</label>
                                         <input

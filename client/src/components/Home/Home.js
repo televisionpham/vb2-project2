@@ -235,7 +235,7 @@ const Home = (props) => {
                   type="text"
                   className="form-control"
                   id="lastName"
-                  value={lastName}
+                  value={lastName ? lastName : ""}
                   onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
@@ -252,7 +252,7 @@ const Home = (props) => {
                   type="text"
                   className="form-control"
                   id="firstName"
-                  value={firstName}
+                  value={firstName ? firstName : ''}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
               </div>
@@ -269,7 +269,7 @@ const Home = (props) => {
                   rows="3"
                   className="form-control"
                   id="address"
-                  value={address}
+                  value={address ? address : ''}
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
@@ -286,7 +286,7 @@ const Home = (props) => {
                   type="text"
                   className="form-control"
                   id="email"
-                  value={email}
+                  value={email ? email : ''}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
@@ -303,7 +303,7 @@ const Home = (props) => {
                   type="text"
                   className="form-control"
                   id="phone"
-                  value={phone}
+                  value={phone ? phone : ''}
                   onChange={(e) => {
                     setPhone(e.target.value);
                   }}
