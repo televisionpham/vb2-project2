@@ -24,17 +24,21 @@ const SignUp = (props) => {
         }  
 
         try {
-            const response = await dispatch(register(user));
-            console.log(response);
+            const response = await dispatch(register(user));            
             if (!response.payload.error) {
                 console.log(response.payload.token);                
                 props.history.push('/');
             } else {
-                setErrorMsg(response.payload.error.response.data);
+                if (response.payload.error.response) {
+                    setErrorMsg(response.payload.error.response.data);
+                }
+                else {
+                    setErrorMsg(response.payload.error.message);
+                }
             }
         } catch (error) {
             console.log(error);
-            setErrorMsg(error);
+            setErrorMsg("Có lỗi xảy ra");
         }          
     }
 

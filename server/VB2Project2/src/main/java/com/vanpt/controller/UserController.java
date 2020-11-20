@@ -26,7 +26,7 @@ import com.vanpt.service.UserService;
 import com.vanpt.utils.JwtUtil;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000", exposedHeaders = HttpHeaders.WWW_AUTHENTICATE)
+@CrossOrigin(origins = "*", exposedHeaders = HttpHeaders.WWW_AUTHENTICATE)
 public class UserController {
 
 	@Autowired
@@ -73,13 +73,13 @@ public class UserController {
 					if (userInfo == null) {
 						return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 								.header(HttpHeaders.WWW_AUTHENTICATE,
-										"s=" + CodeUtils.generateSecretKey() + ",c=" + CodeUtils.generateSecretKey())
+										CodeUtils.generateSecretKey() + "." + CodeUtils.generateSecretKey())
 								.build();
 					}
 					String challenge = userService.generateChallenge(username);
 					return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 							.header(HttpHeaders.WWW_AUTHENTICATE,
-									"s=" + userInfo.get().getSalt() + ",c=" + challenge)
+									userInfo.get().getSalt() + "." + challenge)
 							.build();
 				} else if (content.startsWith("r=")) {
 					String[] parts = content.split(",", 2);

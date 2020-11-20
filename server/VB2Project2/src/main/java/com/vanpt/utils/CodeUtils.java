@@ -8,9 +8,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.util.Base64;
 
 import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
 import com.google.zxing.BarcodeFormat;
@@ -31,10 +31,10 @@ public class CodeUtils {
 
 	public static String hash(String input) {
 		try {
-			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			MessageDigest digest = MessageDigest.getInstance("SHA-1");
 			byte[] encodedHash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-			Base32 base32 = new Base32();
-			return base32.encodeToString(encodedHash);
+			Base64 base64 = new Base64();
+			return base64.encodeToString(encodedHash);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return "";
@@ -83,7 +83,8 @@ public class CodeUtils {
 		final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
 		MatrixToImageWriter.writeToStream(matrix, "png", os);
-		String result = Base64.getEncoder().encodeToString(os.toByteArray());
+		Base64 base64 = new Base64();
+		String result = base64.encodeToString(os.toByteArray());
 		return result;
 	}
 }

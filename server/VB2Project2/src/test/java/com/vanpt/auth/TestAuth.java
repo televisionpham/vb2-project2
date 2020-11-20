@@ -68,9 +68,16 @@ public class TestAuth {
 
 	@Test
 	public void can_hash_password_with_salt() throws Exception {
-		String salt = "4IRKFGEBOYBUFDWYK2IILIR3WZSP5HZP";
+		String salt = "RYS266AM6M7WJD4MIUGU3C3ILU5QX4TC";
 		String password = "test";
 		String result = CodeUtils.hashPassword(password, salt);
 		System.out.println(result);
+	}
+
+	@Test
+	public void can_hash_string() {
+		String input = "/LeE+HVHcLWX+KLpl+8gGT53drU=XRZ7TGT3ARI3E7ADJGSVOTBF4N2HVGU5";
+		String output = CodeUtils.hash(input);
+		System.out.println(output);
 	}
 }

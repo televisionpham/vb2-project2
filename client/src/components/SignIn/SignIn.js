@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login } from '../../store/slice/authSlice'
+import { requestChallenge } from '../../api/auth';
+import { HttpHeaders } from '../../constants';
+import crypto from 'crypto';
 
 const SignIn = (props) => {
     const dispatch = useDispatch();
@@ -10,9 +13,7 @@ const SignIn = (props) => {
     const [errorMsg, setErrorMsg] = useState();
     const [otpCode, setOtpCode] = useState('');
     const [showVerifyOtpForm, setShowVerifyOtpForm] = useState(false);
-
-    const [salt, setSalt] = useState('');
-    const [challenge, setChallenge] = useState('');
+    const [challengeHash, setChallengeHash] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,15 +24,15 @@ const SignIn = (props) => {
         }
 
         try {
-            const response = await dispatch(login(credentials));            
+            const response = await dispatch(login(credentials));
             if (response) {
                 if (!response.payload.error) {
                     console.log(response.payload.token);
                     props.history.push('/');
                 } else {
                     console.log();
-                    if (response.payload.error.response.status === 401 && 
-                        response.payload.error.response.headers["www-authenticate"] === "OTP") {
+                    if (response.payload.error.response.status === 401 &&
+                        response.payload.error.response.headers[HttpHeaders.WWW_AUTHENTICATE] === "OTP") {
                         setShowVerifyOtpForm(true);
                     } else {
                         setErrorMsg(response.payload.error.response.data);
@@ -44,8 +45,40 @@ const SignIn = (props) => {
         }
     }
 
-    const handleChallenge = async () => {
+    const handleChallenge = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await requestChallenge("c=" + username);
+            console.log(response);
+        } catch (error) {
+            console.log(error.response);
+            if (error.response) {
+                if (error.response.status === 401) {
+                    const wwwAuth = error.response.headers[HttpHeaders.WWW_AUTHENTICATE];
+                    console.log(wwwAuth);
+                    if (wwwAuth !== "OTP") {
+                        const parts = wwwAuth.split('.');                        
+                        const salt = parts[0];
+                        const challenge = parts[1];                      
+                        const sha1 = crypto.createHash('sha1');
+                        const passwordHash = sha1.update(salt + password).digest('base64')  
+                        console.log('passwordHash', passwordHash);                     
+                        const answer = sha1.update(passwordHash + challenge).digest('base64');
+                        console.log('passwordHash + challenge', passwordHash + challenge)
+                        console.log('hash(passwordHash + challenge)', answer)
+                        setChallengeHash(answer);
+                        const response2 = await requestChallenge("r=" + answer + ",otp=" + otpCode);
+                        console.log(response2);
+                    } else {
 
+                    }
+                } else {
+                    setErrorMsg("ERROR: " + error.status);
+                }
+            } else {
+                setErrorMsg(error.message)
+            }
+        }
     }
 
     const signInForm = () => {
@@ -55,7 +88,7 @@ const SignIn = (props) => {
                 <div className="row">
                     <div className="col-sm-1 col-md-4"></div>
                     <div className="col-sm-10 col-md-4">
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleChallenge}>
                             <div className="form-group">
                                 <label htmlFor="username">Username</label>
                                 <input type="text" className="form-control" id="username" placeholder="Username"
