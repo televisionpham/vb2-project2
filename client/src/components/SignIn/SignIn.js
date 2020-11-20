@@ -71,6 +71,10 @@ const SignIn = (props) => {
                         try {
                             const response2 = await requestChallenge("r=" + answer + ",o=" + otpCode);
                             console.log(response2);
+                            if (response2 && response2.status === 200) {
+                                dispatch(loginSuccess(response2.data));
+                                props.history.push('/');
+                            }
                         } catch (error2) {
                             console.log(error2);
                             if (error2.response && error2.response.status === 401) {
