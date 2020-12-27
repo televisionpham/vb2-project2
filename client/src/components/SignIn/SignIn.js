@@ -46,6 +46,7 @@ const SignIn = (props) => {
     }
 
     const handleChallenge = async (e) => {
+        setErrorMsg('');
         e.preventDefault();
         try {
             const response1 = await requestChallenge("c=" + username);
@@ -78,10 +79,14 @@ const SignIn = (props) => {
                         } catch (error2) {
                             console.log(error2);
                             if (error2.response && error2.response.status === 401) {
+                                setErrorMsg('');
                                 wwwAuth = error2.response.headers[HttpHeaders.WWW_AUTHENTICATE];
                                 if (wwwAuth === 'OTP') {
                                     setShowVerifyOtpForm(true);
                                 }
+                            }
+                            else if (error2.response && error2.response.status === 403) {
+                                setErrorMsg("Username hoặc password không đúng");
                             }
                         }
 
@@ -107,6 +112,9 @@ const SignIn = (props) => {
             }
         } catch (error) {
             console.log(error);
+            if (error && error.response && error.response.status === 403) {
+                setErrorMsg("OTP không đúng");
+            }
         }
     }
 
